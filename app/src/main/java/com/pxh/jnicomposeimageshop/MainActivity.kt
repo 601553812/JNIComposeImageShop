@@ -28,6 +28,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.pxh.jnicomposeimageshop.ui.theme.JNIComposeImageShopTheme
 
 class MainActivity : ComponentActivity() {
@@ -106,9 +107,13 @@ fun ShowImage(viewModel: MyViewModel) {
         AsyncImage(
             modifier = Modifier.fillMaxWidth(),
             model = bitmap.value,
-            contentDescription = null
+            contentDescription = null,
+            imageLoader =  LocalContext.current.imageLoader
+
         )
-        Button(onClick = { viewModel.changeImageByC() }) {
+        Button(onClick = {
+            viewModel.changeImageByC()
+        }) {
             Text(text = "黑白处理")
         }
     }

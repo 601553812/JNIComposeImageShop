@@ -7,16 +7,20 @@
 #define logi(...) __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define logw(...) __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define loge(...) __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-
-
+#define MAX_SIZE 1920*1080*(2<<4)
+int image[MAX_SIZE];
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_pxh_jnicomposeimageshop_JNI_change(JNIEnv *env, jobject thiz, jintArray bitmap, jint width,
                                             jint height) {
-    int image [width*height];
-    (*env).GetIntArrayRegion(bitmap,0,width*height,image);
+    loge("进入JNI");
+    loge("最大转换图片尺寸为%d",MAX_SIZE);
+    int size = width * height;
+    loge("获取图片尺寸%d",size);
+    loge("--------------------");
+    (*env).GetIntArrayRegion(bitmap,0,size,image);
     loge("获取图片数组成功,宽度为%d,高度为%d",width,height);
-    for (int i = 0; i < width*height; ++i) {
+    for (int i = 0; i < size; ++i) {
         int red = image[i]>>16&0xff;
         int green = image[i]>>8&0xff;
         int blue = image[i]&0xff;
@@ -25,5 +29,5 @@ Java_com_pxh_jnicomposeimageshop_JNI_change(JNIEnv *env, jobject thiz, jintArray
         image[i] = gray+(gray<<8)+(gray<<16)+(alpha<<24);
     }
     loge("图片转换完毕,准备输出");
-    (*env).SetIntArrayRegion(bitmap,0,width*height,image);
+    (*env).SetIntArrayRegion(bitmap,0,size,image);
 }
