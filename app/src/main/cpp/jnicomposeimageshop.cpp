@@ -13,7 +13,10 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_pxh_jnicomposeimageshop_JNI_change(JNIEnv *env, jobject thiz, jintArray bitmap, jint width,
                                             jint height) {
+
+
     loge("进入JNI");
+
     int size = width * height;
     loge("获取图片尺寸%d",size);
     //sizeof获取一个int变量的大小,乘size得到整个数组所需内存大小.使用malloc申请.

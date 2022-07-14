@@ -4,20 +4,19 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -53,6 +52,7 @@ class MainActivity : ComponentActivity() {
         if (requestCode == 111) {
             val uri = data?.data
             if (uri != null) {
+                Log.e("MainActivity", "onActivityResult: ")
                 myViewModel._bitmap.value = MediaStore.Images.Media.getBitmap(contentResolver, uri)
             }
         }
@@ -63,21 +63,31 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(viewModel: MyViewModel) {
     val nav = rememberNavController()
-    NavHost(navController = nav, startDestination = "Menu") {
-        composable("Menu") {
-            Menu(viewModel = viewModel, nav = nav)
-        }
+    NavHost(navController = nav, startDestination = "ShowImage") {
         composable("ShowImage") {
-            ShowImage(viewModel = viewModel)
+            ShowImage(viewModel = viewModel, nav = nav)
         }
     }
 
 }
 
+
 @Composable
-fun Menu(viewModel: MyViewModel, nav: NavHostController) {
-    val context = LocalContext.current
-    Row(modifier = Modifier.fillMaxSize()) {
+fun ShowImage(viewModel: MyViewModel, nav: NavHostController) {
+    val bitmap = remember {
+        mutableStateOf(viewModel._bitmap.value)
+    }
+    viewModel._bitmap.observe(LocalLifecycleOwner.current) {
+        if (bitmap.value !== it) {
+            Log.e("", "ShowImage: ")
+            bitmap.value = it
+        }
+    }
+    Column(Modifier.fillMaxSize()) {
+        val context = LocalContext.current
+        val showDialog = remember {
+            mutableStateOf(false)
+        }
         Text(text = "选择一张图片进行黑白处理")
         Button(onClick = {
             val intent = Intent(Intent.ACTION_PICK, null)
@@ -86,36 +96,45 @@ fun Menu(viewModel: MyViewModel, nav: NavHostController) {
         }) {
             Text(text = "从相册选择图片")
         }
-    }
-    viewModel._bitmap.observe(LocalLifecycleOwner.current) {
-        nav.navigate("ShowImage")
-    }
-
-
-}
-
-
-@Composable
-fun ShowImage(viewModel: MyViewModel) {
-    val bitmap = remember {
-        mutableStateOf(viewModel._bitmap.value)
-    }
-    viewModel._bitmap.observe(LocalLifecycleOwner.current) {
-        bitmap.value = it
-    }
-    Column(Modifier.fillMaxSize()) {
         AsyncImage(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.5f),
             model = bitmap.value,
             contentDescription = null,
-            imageLoader =  LocalContext.current.imageLoader
+            imageLoader = LocalContext.current.imageLoader
 
         )
         Button(onClick = {
-            viewModel.changeImageByC()
+            if (viewModel._bitmap.value != null) {
+                viewModel.changeImageByC()
+            } else {
+                showDialog.value = true
+            }
         }) {
             Text(text = "黑白处理")
         }
+        if (showDialog.value) {
+            AlertDialog(onDismissRequest = { showDialog.value = false },
+                buttons = {
+                    Button(
+                        onClick = { showDialog.value = false },
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .align(alignment = Alignment.CenterHorizontally)
+                    ) {
+                        Text(text = "好的")
+                    }
+                },
+                title = { Text(text = "请选择一张图片!") },
+                text = {
+                    Text(text = "如果没有图片就没办法处理哦!")
+                }
+
+
+            )
+        }
+
     }
 
 
@@ -125,6 +144,6 @@ fun ShowImage(viewModel: MyViewModel) {
 @Composable
 fun DefaultPreview() {
     JNIComposeImageShopTheme {
-        Menu(MyViewModel(), NavHostController(LocalContext.current))
+        ShowImage(MyViewModel(), NavHostController(LocalContext.current))
     }
 }

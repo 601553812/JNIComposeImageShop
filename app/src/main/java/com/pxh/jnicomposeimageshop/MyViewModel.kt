@@ -4,11 +4,16 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MyViewModel : ViewModel() {
     val _bitmap: MutableLiveData<Bitmap> = MutableLiveData()
-    val bitmap:Bitmap by lazy {   _bitmap.value!!}
+
     fun changeImageByC() {
+        val bitmap = _bitmap.value!!
         //初始化JNI
         val jni = JNI()
         //获取尺寸
@@ -21,12 +26,16 @@ class MyViewModel : ViewModel() {
         //将像素数组传入JNI
         Log.e("MyViewModel", "changeImageByC: ")
 
-        jni.change(pixels, bitmap.width, bitmap.height)
 
-        Log.e("MyViewModel", "changeImageByC: 1")
+                jni.change(pixels, bitmap.width, bitmap.height)
+
+            _bitmap.value =
+                Bitmap.createBitmap(pixels, bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+            Log.e("MyViewModel", "changeImageByC2: ${Thread.currentThread()}")
+
+
+
         //利用返回的数组创建bitmap
-        _bitmap.value =
-            Bitmap.createBitmap(pixels, bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
 
     }
 
